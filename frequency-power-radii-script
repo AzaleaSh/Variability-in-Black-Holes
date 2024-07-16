@@ -1,0 +1,70 @@
+import numpy as np
+import matplotlib.pyplot as plt
+from astropy.timeseries import LombScargle
+from scipy.fft import rfftfreq, rfft
+import pandas as pd
+
+#add file and the variable you're looking for!
+df = pd.read_csv(file, sep = '\t', header=None, names = ['time', 'radius', variable])
+variable = #your thrid column name
+
+
+def main(df, variable):
+    fft_data = []
+    fftls_data = []
+
+    radiidf = df.radius.unique()
+
+    freq = rfftfreq(572, 100)
+
+    for radius in df.radius.unique():
+    df_new = df.loc[df['radius'] == radius]
+    variable_array = np.array(df_new[f'{variable}'])
+    power = rfft(variable_array)
+    fft_data.append(power)
+    frequency, power2 = LombScargle(df_new['time'], variable_array).autopower()
+    fftls_data.append(power2)
+
+    fft_df = pd.DataFrame(fft_data)
+    fft_df = fft_df.transpose()
+    fftls_df = pd.DataFrame(fftls_data)
+    fftls_df = fftls_df.transpose()
+
+    a = .9
+    keplerian_value = 1/(radiidf**1.5 + a)
+    keplerian_freq = (keplerian_value/ (2** np.pi))
+    rad_epicyclic_freq = np.sqrt((1- 6/radiidf + 8*a /(radiidf**1.5) - 3 * a ** 2 / (radiidf ** 2))) * keplerian_value / (2* np.pi)
+    verticl_freq = np.sqrt(keplerian_value ** 2 * (1- (4*a / (radiidf**1.5)) + 3* a * a / (radiidf **2))) / (2* np.pi)
+
+
+    plt.figure()
+    plt.title('SciPy of Accretion Rate vs Radius')
+    plt.xlabel('Radius')
+    plt.ylabel('Frequency')
+    plt.plot(radiidf, rad_epicyclic_freq, label = 'Radial Epicyclic frequency', linestyle = ':', c = 'red')
+    plt.plot(radiidf, keplerian_freq, label = 'Keplerian Frequency', linestyle = '--', c = 'red')
+    plt.plot(radiidf, verticl_freq, label = 'Vertical Epicyclic Frequency', linestyle = '-', c = 'red')
+    plt.legend()
+    plt.ylim(0, 0.005)
+    plt.xscale('log')
+    plt.contourf(radiidf, freq, np.log(fft_df), cmap='YlGn', extend = 'both', levels = 200)
+    plt.xscale('log')
+    plt.colorbar(label = 'Power')
+    plt.legend()
+    plt.show()
+
+    plt.figure()
+    plt.title('LombScargle of Accretion Rate vs Radius')
+    plt.contourf(radiidf, frequency, np.log(fftls_df), cmap='YlGn', extend = 'both', levels = 200)
+    plt.plot(radiidf, rad_epicyclic_freq, label = 'Radial Epiyclic frequency', linestyle = ':', c = 'red')
+    plt.plot(radiidf, keplerian_freq, label = 'Keplerian Frequency', linestyle = '--', c = 'red')
+    plt.plot(radiidf, verticl_freq, label = 'Vertical Epicyclic Frequency', linestyle = '-', c = 'red')
+    plt.legend()
+    plt.ylim(0, 0.005)
+    plt.xscale('log')
+    plt.colorbar(label = 'Power')
+    plt.xlabel('Radius')
+    plt.ylabel('Frequency')
+    plt.show()
+
+main(df, variable)

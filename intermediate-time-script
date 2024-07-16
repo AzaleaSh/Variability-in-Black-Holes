@@ -1,0 +1,39 @@
+import numpy as np
+import matplotlib.pyplot as plt
+from astropy.timeseries import LombScargle
+from scipy.fft import fft, fftfreq, rfftfreq, rfft
+import pandas as pd
+
+#your file!
+df = pd.read_csv(file, sep = '\t', header=None, names = ['time', 'radius', variable])
+
+
+def main(min, max, df):
+  fft_data = []
+
+  df = df.loc[(df['time'] >= min) & (df['time'] <= max)]
+  freq = rfftfreq(len(df.time.unique()), 100)
+  for radius in df.radius.unique():
+    df_new = df.loc[df['radius'] == radius]
+    variable_array = np.array(df_new['mdot'])
+    power = rfft(variable_array)
+    fft_data.append(power)
+  radiidf = df.radius.unique()
+  fft_df = pd.DataFrame(fft_data)
+  fft3_df = fft_df.transpose()
+  plt.figure()
+  plt.title('SciPy of Accretion Rate vs Radius')
+  plt.xlabel('Radius')
+  plt.ylabel('Frequency')
+  plt.ylim(0, 0.005)
+  plt.xscale('log')
+  plt.contourf(radiidf, freq, np.log(fft3_df), cmap='YlGn', extend = 'both', levels = 200)
+  plt.xscale('log')
+  plt.colorbar(label = 'Power')
+  plt.show()
+
+#change times to liking !
+timesmin = []
+timesmax = []
+for timemin, timemax in zip(timesmin, timesmax):
+  main(timemin, timemax, df)

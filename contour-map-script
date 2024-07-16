@@ -1,0 +1,36 @@
+#Here is the script for Contour Map,
+#Only rows to edit is 9, 11, and 36
+
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.fft import fft, fftfreq, rfftfreq, rfft
+import pandas as pd
+
+#change file name and variable
+df = pd.read_csv(file, sep = '\t', header=None, names = ['time', 'radius', variable])
+variable = #whatever your third column is
+
+def main(df, variable, binmin, binmax, cmap):
+  plt.figure()
+  xd_data = []
+  for radius in df.radius.unique():
+    df_new = df.loc[df['radius'] == radius]
+    var_array = np.array(df_new[f'{variable}'])
+    xd_data.append(var_array)
+  xd_df = pd.DataFrame(xd_data)
+  xd_df = xd_df.transpose()
+  time_df = df.time.unique()
+  radius_df = df.radius.unique()
+  plt.contourf(radius_df, time_df, xd_df, cmap = cmap, extend = 'both', levels =np.linspace(binmin, binmax, 200))
+  plt.colorbar(label = f'{variable}')
+  plt.title(f'Time, Radius, & {variable}', fontsize = 10)
+  plt.suptitle('Black Holes!')
+  plt.xlabel('Radius')
+  plt.ylabel('Time')
+  plt.xscale('log')
+  plt.xlim(0, df.radius.max())
+  plt.grid()
+  plt.show()
+
+#change cmap, binmin, binmax
+main(df, variable, cmap, binmin, binmax)
